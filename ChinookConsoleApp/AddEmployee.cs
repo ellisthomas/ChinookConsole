@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Dapper;
+using System;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
@@ -14,22 +15,17 @@ namespace ChinookConsoleApp
             Console.WriteLine("Enter last name:");
             var y = Console.ReadLine();
 
-            using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["Chinook"].ConnectionString))
+            using (var connection = new SqlConnection("Server = (local)\\SqlExpress; Database=chinook;Trusted_Connection=True;"))
             {
                 var employeeAdd = connection.CreateCommand();
-                employeeAdd.CommandText = "Insert into Employee(FirstName, LastName) " +
-                                          "Values(@firstName, @lastName)";
-
-                var firstNameParameter = employeeAdd.Parameters.Add("@firstName", SqlDbType.VarChar);
-                firstNameParameter.Value = x;
-
-                var lastNameParameter = employeeAdd.Parameters.Add("@lastName", SqlDbType.VarChar);
-                lastNameParameter.Value = y;
 
                 try
                 {
                     connection.Open();
-                    var rowsAffected = employeeAdd.ExecuteNonQuery();
+
+                    var rowsAffected = connection.Execute("Insert into Employee(FirstName, LastName) " +
+                                          "Values(@firstName, @lastName)", new { FirstName = x, LastName = y });
+
                     Console.WriteLine(rowsAffected != 1 ? "Add Failed" : "Success!");
                 }
                 catch (Exception ex)
